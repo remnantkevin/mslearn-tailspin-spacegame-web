@@ -45,6 +45,25 @@ steps:
     arguments: '--no-restore --configuration $(buildConfiguration)'
     projects: '**/*.csproj'
 
+# This build task runs the dotnet test command.
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests - $(buildConfiguration)'
+  inputs:
+    command: 'test'
+    arguments: '--no-build --configuration $(buildConfiguration)'
+    # Notice that this task does not specify the --logger trx argument that you used when you ran
+    # the tests manually. The publishTestResults argument adds that for you. This argument tells
+    # the pipeline to generate the TRX file to a temporary directory, accessible through
+    # the $(Agent.TempDirectory) built-in variable. It also publishes the task results to the
+    # pipeline.
+    publishTestResults: true
+    # The projects argument specifies all C# projects that match "**/*.Tests.csproj." The "**"
+    # part matches all directories, and the "*.Tests.csproj" part matches all projects whose
+    # file name ends with ".Tests.csproj." The unit-tests branch contains just one unit test
+    # project, Tailspin.SpaceGame.Web.Tests.csproj. But by specifying a pattern, you can run
+    # additional test projects without the need to modify your build configuration.
+    projects: '**/*.Tests.csproj'
+
 - task: DotNetCoreCLI@2
   displayName: 'Publish the project - $(buildConfiguration)'
   inputs:
