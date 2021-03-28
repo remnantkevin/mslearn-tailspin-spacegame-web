@@ -11,7 +11,7 @@ namespace TailSpin.SpaceGame.Web
 {
     public class LocalDocumentDBRepository<T> : IDocumentDBRepository<T> where T : Model
     {
-        // An in-memory list of all items in the collection. I changed this.
+        // An in-memory list of all items in the collection. I changed this. And this.
         private readonly List<T> _items;
 
         public LocalDocumentDBRepository(string fileName)
