@@ -45,12 +45,20 @@ steps:
     arguments: '--no-restore --configuration $(buildConfiguration)'
     projects: '**/*.csproj'
 
+# Install coverage report generator tool (that converts from XML to HTML) from manifest.
+- task: DotNetCoreCLI@2
+  displayName: 'Install .NET Core tools from local manifest'
+  inputs:
+    command: custom
+    custom: tool
+    arguments: 'restore'
+
 # This build task runs the dotnet test command.
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests - $(buildConfiguration)'
   inputs:
     command: 'test'
-    arguments: '--no-build --configuration $(buildConfiguration)'
+    arguments: '--no-build --configuration $(buildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/Coverage/'
     # Notice that this task does not specify the --logger trx argument that you used when you ran
     # the tests manually. The publishTestResults argument adds that for you. This argument tells
     # the pipeline to generate the TRX file to a temporary directory, accessible through the
@@ -63,6 +71,21 @@ steps:
     # project, Tailspin.SpaceGame.Web.Tests.csproj. But by specifying a pattern, you can run
     # additional test projects without the need to modify your build configuration.
     projects: '**/*.Tests.csproj'
+
+# Convert XML coverage report to HTML.
+- task: DotNetCoreCLI@2
+  displayName: 'Create code coverage report'
+  inputs:
+    command: custom
+    custom: tool
+    arguments: 'run reportgenerator -reports:$(Build.SourcesDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:HtmlInline_AzurePipelines'
+
+# Publishes the report to the pipeline.
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage report'
+  inputs:
+    codeCoverageTool: 'cobertura'
+    summaryFileLocation: '$(Build.SourcesDirectory)/**/coverage.cobertura.xml'
 
 - task: DotNetCoreCLI@2
   displayName: 'Publish the project - $(buildConfiguration)'
